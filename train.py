@@ -6,7 +6,6 @@ from utils import AccuracyCounter, logging
 from operator import itemgetter
 import torch
 
-
 def train(model, loss_func, epochs, optimizer, lr, train_loader, eval_loader, device=None):
     device = device if device else torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     optimizer = optimizer(model.parameters(), lr=lr)
@@ -16,7 +15,7 @@ def train(model, loss_func, epochs, optimizer, lr, train_loader, eval_loader, de
         avg_loss = None
         train_accuracy = AccuracyCounter()
         for i, (data, target) in enumerate(train_loader):
-            model.zero_grad(), optimizer.zero_grad()
+            optimizer.zero_grad()
             out = model(data)
             loss = loss_func(out, target.to(device))
             avg_loss = loss.item() if avg_loss is None else (0.99*avg_loss + 0.01*loss.item())
@@ -39,6 +38,7 @@ def train(model, loss_func, epochs, optimizer, lr, train_loader, eval_loader, de
 
 
 if __name__ == "__main__":
+    torch.manual_seed(2)
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     model = SequenceTagger(126, 50, 100, 100, 2).to(device)
     train(model, CrossEntropyLoss(), 5, Adam, 0.1, loader('data/train', 250), loader('data/test', 1000))

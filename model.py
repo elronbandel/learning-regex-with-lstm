@@ -1,4 +1,4 @@
-from torch.nn import Module, Embedding, LSTM, Sequential, Linear, ReLU,Tanh, LogSoftmax
+from torch.nn import Module, Embedding, LSTM, Sequential, Linear, ReLU, Tanh, LogSoftmax
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 import torch
 
