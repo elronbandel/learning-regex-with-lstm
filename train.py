@@ -1,14 +1,15 @@
 from model import SequenceTagger
 from dataset import loader
 from torch.nn import CrossEntropyLoss
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from utils import AccuracyCounter, logging
 from operator import itemgetter
 import torch
 
-def train(model, loss_func, epochs, optimizer, lr, train_loader, eval_loader, device=None):
+def train(model, loss_func, epochs, optimizer, train_loader, eval_loader, device=None):
     device = device if device else torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    optimizer = optimizer(model.parameters(), lr=lr)
+    opt_str = str(optimizer).replace('\n ', ',')
+    logging(f'Training - loss:{loss_func}, epochs:{epochs}, optimizer:{opt_str}, device:{device}')
     for epoch in range(epochs):
         # Train
         model.train()
@@ -16,6 +17,7 @@ def train(model, loss_func, epochs, optimizer, lr, train_loader, eval_loader, de
         train_accuracy = AccuracyCounter()
         for i, (data, target) in enumerate(train_loader):
             optimizer.zero_grad()
+            model.zero_grad()
             out = model(data)
             loss = loss_func(out, target.to(device))
             avg_loss = loss.item() if avg_loss is None else (0.99*avg_loss + 0.01*loss.item())
@@ -38,7 +40,8 @@ def train(model, loss_func, epochs, optimizer, lr, train_loader, eval_loader, de
 
 
 if __name__ == "__main__":
-    torch.manual_seed(2)
+    torch.manual_seed(1)
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    model = SequenceTagger(126, 50, 100, 100, 2).to(device)
-    train(model, CrossEntropyLoss(), 5, Adam, 0.1, loader('data/train', 250), loader('data/test', 1000))
+    model = SequenceTagger(126, 50, 50, 50, 3).to(device)
+    optimizer = Adam(model.parameters(), lr=0.001)
+    train(model, CrossEntropyLoss(), 3, optimizer, loader('data/train', 50), loader('data/test', 500))
